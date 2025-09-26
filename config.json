@@ -1,0 +1,20 @@
+{
+  "indexPath": "/index.html",
+  "IsSPA": true,
+  "cacheFileExtInBrowser": [
+    ".js",
+    ".css",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".svg",
+    ".woff",
+    ".woff2"
+  ],
+  "cacheConfig": {
+    "defaultExpiry": "24h",
+    "staleInterval": "1h",
+    "cleanupInterval": "10m"
+  }
+}
