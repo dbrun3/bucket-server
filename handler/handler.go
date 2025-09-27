@@ -14,7 +14,6 @@ import (
 
 type Handler struct {
 	indexPath             string
-	IsSPA                 bool
 	contentFileExt        string
 	cacheFileExtInBrowser []string
 	cache                 *cache.Cache
@@ -24,7 +23,6 @@ type Handler struct {
 func NewHandler(cfg Config) *Handler {
 	return &Handler{
 		indexPath:             cfg.IndexPath,
-		IsSPA:                 cfg.IsSPA,
 		contentFileExt:        cfg.ContentFileExt,
 		cacheFileExtInBrowser: cfg.CacheFileExtInBrowser,
 		cache:                 cache.NewCache(cfg.CacheConfig),
@@ -62,8 +60,7 @@ func (h *Handler) getPage(ctx context.Context, host, path string) ([]byte, error
 	page, state := h.cache.GetPage(host, path)
 	ext := filepath.Ext(path)
 
-	// append ext (.html) to paths if missing (non-SPA)
-	if !h.IsSPA && ext == "" {
+	if ext == "" {
 		path = strings.TrimRight(path, "/")
 		path += h.contentFileExt
 	}
@@ -88,11 +85,16 @@ func (h *Handler) getPage(ctx context.Context, host, path string) ([]byte, error
 		newPage, err := h.s3.DownloadFile(ctx, host, path)
 		if err != nil {
 			if errors.Is(err, s3.ErrNoKey) &&
-				h.IsSPA &&
 				ext == "" &&
 				path != h.indexPath {
-				// redirect directory routes to index when true (used in SPA's)
-				return h.getPage(ctx, host, h.indexPath)
+				// rewrite directory routes with index when true (used in SPA's) SPA assumed, todo: make configurable from bucket
+				index, err := h.getPage(ctx, host, h.indexPath)
+				if err == nil {
+					go func() {
+						h.cache.CachePage(host, path, index)
+					}()
+				}
+				return index, err
 			}
 			return nil, err
 		}

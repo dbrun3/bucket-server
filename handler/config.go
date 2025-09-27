@@ -8,7 +8,6 @@ import (
 
 type Config struct {
 	IndexPath             string            `json:"indexPath"`
-	IsSPA                 bool              `json:"isSPA"`
 	ContentFileExt        string            `json:"contentFileExt"`
 	CacheFileExtInBrowser []string          `json:"cacheFileExtInBrowser"`
 	CacheConfig           cache.CacheConfig `json:"cacheConfig"`

@@ -1,6 +1,6 @@
 {
   "indexPath": "/index.html",
-  "IsSPA": true,
+  "contentFileExt": ".html",
   "cacheFileExtInBrowser": [
     ".js",
     ".css",
