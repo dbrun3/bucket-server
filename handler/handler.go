@@ -90,17 +90,13 @@ func (h *Handler) getPage(ctx context.Context, host, path string) ([]byte, error
 				// rewrite directory routes with index when true (used in SPA's) SPA assumed, todo: make configurable from bucket
 				index, err := h.getPage(ctx, host, h.indexPath)
 				if err == nil {
-					go func() {
-						h.cache.CachePage(host, path, index)
-					}()
+					go h.cache.CachePage(host, path, index)
 				}
 				return index, err
 			}
 			return nil, err
 		}
-		go func() {
-			h.cache.CachePage(host, path, newPage)
-		}()
+		go h.cache.CachePage(host, path, newPage)
 		return newPage, nil
 	}
 }
