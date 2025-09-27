@@ -18,12 +18,14 @@ func ReadConfigFromFile(filename string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	return ReadConfigFromString(string(data))
+}
 
+func ReadConfigFromString(configString string) (*Config, error) {
 	var config Config
-	err = json.Unmarshal(data, &config)
+	err := json.Unmarshal([]byte(configString), &config)
 	if err != nil {
 		return nil, err
 	}
-
 	return &config, nil
 }

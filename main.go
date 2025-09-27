@@ -2,6 +2,7 @@ package main
 
 import (
 	"bucket-serve/handler"
+	"errors"
 	"log"
 	"net/http"
 	"os"
@@ -10,7 +11,7 @@ import (
 func main() {
 	log.Println("Starting server...")
 	mux := http.NewServeMux()
-	config, err := handler.ReadConfigFromFile(os.Getenv("CONFIG"))
+	config, err := initConfig()
 	if err != nil {
 		log.Fatal("Fatal error reading config: ", err)
 	}
@@ -19,4 +20,16 @@ func main() {
 
 	log.Println("Server Listening on 8080")
 	http.ListenAndServe(":8080", mux)
+}
+
+func initConfig() (*handler.Config, error) {
+	configFilepath := os.Getenv("CONFIG_FILE")
+	if configFilepath != "" {
+		return handler.ReadConfigFromFile(configFilepath)
+	}
+	configString := os.Getenv("CONFIG")
+	if configString != "" {
+		return handler.ReadConfigFromString(configString)
+	}
+	return nil, errors.New("no config")
 }
