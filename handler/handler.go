@@ -58,9 +58,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) getPage(ctx context.Context, host, path string) ([]byte, error) {
 
 	page, state := h.cache.GetPage(host, path)
-	ext := filepath.Ext(path)
 
-	if ext == "" {
+	if filepath.Ext(path) == "" {
 		path = strings.TrimRight(path, "/")
 		path += h.contentFileExt
 	}
@@ -85,9 +84,9 @@ func (h *Handler) getPage(ctx context.Context, host, path string) ([]byte, error
 		newPage, err := h.s3.DownloadFile(ctx, host, path)
 		if err != nil {
 			if errors.Is(err, s3.ErrNoKey) &&
-				ext == "" &&
+				filepath.Ext(path) == h.contentFileExt &&
 				path != h.indexPath {
-				// rewrite directory routes with index when true (used in SPA's) SPA assumed, todo: make configurable from bucket
+				// rewrite missing content routes with index (used in SPA's) SPA assumed, todo: make configurable from bucket
 				index, err := h.getPage(ctx, host, h.indexPath)
 				if err == nil {
 					go h.cache.CachePage(host, path, index)
