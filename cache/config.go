@@ -24,4 +24,5 @@ type CacheConfig struct {
 	DefaultExpiry   Duration `json:"defaultExpiry"`
 	StaleInterval   Duration `json:"staleInterval"`
 	CleanupInterval Duration `json:"cleanupInterval"`
+	DisableCache    bool     `json:"disableCache"`
 }

@@ -16,14 +16,19 @@ const (
 )
 
 type Cache struct {
-	cache         *cache.Cache
-	staleInterval time.Duration
+	cache          *cache.Cache
+	staleInterval  time.Duration
+	expiryDuration time.Duration
 }
 
 func NewCache(cfg CacheConfig) *Cache {
+	if cfg.DisableCache {
+		return &Cache{}
+	}
 	return &Cache{
-		staleInterval: time.Duration(cfg.StaleInterval),
-		cache:         cache.New(time.Duration(cfg.DefaultExpiry), time.Duration(cfg.CleanupInterval)),
+		staleInterval:  time.Duration(cfg.StaleInterval),
+		expiryDuration: time.Duration(cfg.DefaultExpiry),
+		cache:          cache.New(time.Duration(cfg.DefaultExpiry), time.Duration(cfg.CleanupInterval)),
 	}
 }
 
@@ -31,7 +36,7 @@ func (c *Cache) GetPage(host, path string) ([]byte, PageState) {
 	page, expiry, found := c.cache.GetWithExpiration(fmt.Sprintf("%s%s", host, path))
 	if found {
 		page := page.([]byte)
-		if isFresh(expiry, c.staleInterval) {
+		if c.isFresh(expiry, c.staleInterval) {
 			return page, HIT
 		}
 		return page, STALE
@@ -51,6 +56,8 @@ func (c *Cache) ClearPage(host, path string) {
 	c.cache.Delete(fmt.Sprintf("%s%s", host, path))
 }
 
-func isFresh(expiry time.Time, staleInterval time.Duration) bool {
-	return expiry.Unix()-time.Now().Unix() > int64(staleInterval.Seconds())
+func (c *Cache) isFresh(expiry time.Time, staleInterval time.Duration) bool {
+	timeUntilExpiry := expiry.Unix() - time.Now().Unix()
+	timeElapsed := int64(c.expiryDuration.Seconds()) - timeUntilExpiry
+	return timeElapsed < int64(staleInterval.Seconds())
 }

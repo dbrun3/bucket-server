@@ -10,6 +10,7 @@ type Config struct {
 	IndexPath             string            `json:"indexPath"`
 	ContentFileExt        string            `json:"contentFileExt"`
 	CacheFileExtInBrowser []string          `json:"cacheFileExtInBrowser"`
+	SkipCacheExt          []string          `json:"skipCacheExt"`
 	CacheConfig           cache.CacheConfig `json:"cacheConfig"`
 }
 

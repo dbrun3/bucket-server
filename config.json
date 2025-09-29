@@ -8,13 +8,19 @@
     ".jpg",
     ".jpeg",
     ".gif",
+    ".svg"
+  ],
+  "skipCacheExt": [
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
     ".svg",
-    ".woff",
-    ".woff2"
+    ".pdf"
   ],
   "cacheConfig": {
-    "defaultExpiry": "24h",
-    "staleInterval": "1h",
-    "cleanupInterval": "10m"
+    "defaultExpiry": "30m",
+    "staleInterval": "2m",
+    "cleanupInterval": "5m"
   }
 }

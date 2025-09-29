@@ -16,6 +16,8 @@ type Handler struct {
 	indexPath             string
 	contentFileExt        string
 	cacheFileExtInBrowser []string
+	skipCacheExt          []string
+	disableCache          bool
 	cache                 *cache.Cache
 	s3                    *s3.Client
 }
@@ -25,6 +27,8 @@ func NewHandler(cfg Config) *Handler {
 		indexPath:             cfg.IndexPath,
 		contentFileExt:        cfg.ContentFileExt,
 		cacheFileExtInBrowser: cfg.CacheFileExtInBrowser,
+		skipCacheExt:          cfg.SkipCacheExt,
+		disableCache:          cfg.CacheConfig.DisableCache,
 		cache:                 cache.NewCache(cfg.CacheConfig),
 		s3:                    s3.NewClient(),
 	}
@@ -57,12 +61,16 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) getPage(ctx context.Context, host, path string) ([]byte, error) {
 
-	page, state := h.cache.GetPage(host, path)
-
 	if filepath.Ext(path) == "" {
 		path = strings.TrimRight(path, "/")
 		path += h.contentFileExt
 	}
+
+	if h.disableCache || slices.Contains(h.skipCacheExt, filepath.Ext(path)) {
+		return h.s3.DownloadFile(ctx, host, path)
+	}
+
+	page, state := h.cache.GetPage(host, path)
 
 	switch state {
 
