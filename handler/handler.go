@@ -51,6 +51,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	ext := filepath.Ext(path)
 	contentType := mime.TypeByExtension(ext)
+	if contentType == "" {
+		contentType = getFallbackContentType(ext)
+	}
 	w.Header().Set("Content-Type", contentType)
 	if slices.Contains(h.cacheFileExtInBrowser, ext) {
 		w.Header().Set("Cache-Control", "public, max-age=31536000")
@@ -106,4 +109,34 @@ func (h *Handler) getPage(ctx context.Context, host, path string) ([]byte, error
 		go h.cache.CachePage(host, path, newPage)
 		return newPage, nil
 	}
+}
+
+func getFallbackContentType(ext string) string {
+	fallbackTypes := map[string]string{
+		".css":   "text/css; charset=utf-8",
+		".js":    "application/javascript; charset=utf-8",
+		".json":  "application/json; charset=utf-8",
+		".html":  "text/html; charset=utf-8",
+		".htm":   "text/html; charset=utf-8",
+		".xml":   "application/xml; charset=utf-8",
+		".txt":   "text/plain; charset=utf-8",
+		".png":   "image/png",
+		".jpg":   "image/jpeg",
+		".jpeg":  "image/jpeg",
+		".gif":   "image/gif",
+		".svg":   "image/svg+xml",
+		".webp":  "image/webp",
+		".ico":   "image/x-icon",
+		".woff":  "font/woff",
+		".woff2": "font/woff2",
+		".ttf":   "font/ttf",
+		".eot":   "application/vnd.ms-fontobject",
+		".pdf":   "application/pdf",
+		".zip":   "application/zip",
+	}
+
+	if contentType, ok := fallbackTypes[ext]; ok {
+		return contentType
+	}
+	return "application/octet-stream"
 }
