@@ -34,32 +34,36 @@ func NewClient() *Client {
 	}
 }
 
-func (c *Client) DownloadFile(ctx context.Context, bucketName string, objectKey string) ([]byte, error) {
+func (c *Client) DownloadFile(ctx context.Context, bucketName string, objectKey string) (content []byte, etag string, err error) {
 	objectKey = strings.TrimLeft(objectKey, "/")
 	if objectKey == "" {
-		return nil, ErrNoKey
+		return content, etag, ErrNoKey
 	}
 	result, err := c.s3Client.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(objectKey),
 	})
+	if result.ETag != nil {
+		etag = *result.ETag
+	}
+
 	if err != nil {
 		var noBucket *types.NoSuchBucket
 		if errors.As(err, &noBucket) {
-			return nil, ErrNoBucket
+			return content, etag, ErrNoBucket
 		}
 		var noKey *types.NoSuchKey
 		if errors.As(err, &noKey) {
-			return nil, ErrNoKey
+			return content, etag, ErrNoKey
 		}
 		log.Printf("Couldn't get object %v:%v. Here's why: %v\n", bucketName, objectKey, err)
-		return nil, err
+		return content, etag, err
 	}
 	defer result.Body.Close()
 
-	body, err := io.ReadAll(result.Body)
+	content, err = io.ReadAll(result.Body)
 	if err != nil {
 		log.Printf("Couldn't read object body from %v. Here's why: %v\n", objectKey, err)
 	}
-	return body, nil
+	return content, etag, err
 }

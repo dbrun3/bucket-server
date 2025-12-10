@@ -21,6 +21,11 @@ type Cache struct {
 	expiryDuration time.Duration
 }
 
+type Page struct {
+	page []byte
+	etag string
+}
+
 func NewCache(cfg CacheConfig) *Cache {
 	if cfg.DisableCache {
 		return &Cache{}
@@ -32,24 +37,24 @@ func NewCache(cfg CacheConfig) *Cache {
 	}
 }
 
-func (c *Cache) GetPage(host, path string) ([]byte, PageState) {
-	page, expiry, found := c.cache.GetWithExpiration(fmt.Sprintf("%s%s", host, path))
+func (c *Cache) GetPage(host, path string) (page []byte, etag string, state PageState) {
+	content, expiry, found := c.cache.GetWithExpiration(fmt.Sprintf("%s%s", host, path))
 	if found {
-		page := page.([]byte)
+		p := content.(Page)
 		if c.isFresh(expiry, c.staleInterval) {
-			return page, HIT
+			return p.page, p.etag, HIT
 		}
-		return page, STALE
+		return p.page, p.etag, STALE
 	}
-	return nil, MISS
+	return nil, "", MISS
 }
 
-func (c *Cache) CachePage(host, path string, page []byte) {
-	c.cache.SetDefault(fmt.Sprintf("%s%s", host, path), page)
+func (c *Cache) CachePage(host, path string, page []byte, etag string) {
+	c.cache.SetDefault(fmt.Sprintf("%s%s", host, path), Page{page: page, etag: etag})
 }
 
-func (c *Cache) UpdatePage(host, path string, page []byte) {
-	c.cache.Replace(fmt.Sprintf("%s%s", host, path), page, cache.DefaultExpiration)
+func (c *Cache) UpdatePage(host, path string, page []byte, etag string) {
+	c.cache.Replace(fmt.Sprintf("%s%s", host, path), Page{page: page, etag: etag}, cache.DefaultExpiration)
 }
 
 func (c *Cache) ClearPage(host, path string) {
