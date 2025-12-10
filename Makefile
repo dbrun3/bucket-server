@@ -8,7 +8,8 @@ endif
 # Default value if not set in .env or shell
 SERVER_URL ?= localhost:8080
 
-build: 	go build -o bin/app ./main.go
+build:
+	go build -o bin/bs ./main.go
 
 clean:
 	rm -rf bin/*
