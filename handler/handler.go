@@ -7,6 +7,7 @@ import (
 	"errors"
 	"mime"
 	"net/http"
+	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -38,6 +39,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	host := r.Host
 	path := r.URL.Path
 	ctx := r.Context()
+
+	// dev mode: override host with DEV_HOST env var
+	if devHost := os.Getenv("DEV_HOST"); devHost != "" {
+		host = devHost
+	}
 
 	page, etag, err := h.getPage(ctx, host, path)
 	if err != nil {
