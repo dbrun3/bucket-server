@@ -43,9 +43,6 @@ func (c *Client) DownloadFile(ctx context.Context, bucketName string, objectKey 
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(objectKey),
 	})
-	if result.ETag != nil {
-		etag = *result.ETag
-	}
 
 	if err != nil {
 		var noBucket *types.NoSuchBucket
@@ -60,6 +57,10 @@ func (c *Client) DownloadFile(ctx context.Context, bucketName string, objectKey 
 		return content, etag, err
 	}
 	defer result.Body.Close()
+
+	if result.ETag != nil {
+		etag = *result.ETag
+	}
 
 	content, err = io.ReadAll(result.Body)
 	if err != nil {
